@@ -2,7 +2,7 @@ SHELL := /bin/bash
 
 NS ?= abhinavsingh
 IMAGE_NAME ?= proxy.py
-VERSION ?= v$(shell python -m proxy --version)
+VERSION ?= v$(shell python3 -m proxy --version)
 LATEST_TAG := $(NS)/$(IMAGE_NAME):latest
 IMAGE_TAG := $(NS)/$(IMAGE_NAME):$(VERSION)
 
@@ -42,19 +42,19 @@ https-certificates:
 
 ca-certificates:
 	# Generate CA key
-	python -m proxy.common.pki gen_private_key \
+	python3 -m proxy.common.pki gen_private_key \
 		--private-key-path $(CA_KEY_FILE_PATH)
-	python -m proxy.common.pki remove_passphrase \
+	python3 -m proxy.common.pki remove_passphrase \
 		--private-key-path $(CA_KEY_FILE_PATH)
 	# Generate CA certificate
-	python -m proxy.common.pki gen_public_key \
+	python3 -m proxy.common.pki gen_public_key \
 		--private-key-path $(CA_KEY_FILE_PATH) \
 		--public-key-path $(CA_CERT_FILE_PATH)
 	# Generate key that will be used to generate domain certificates on the fly
 	# Generated certificates are then signed with CA certificate / key generated above
-	python -m proxy.common.pki gen_private_key \
+	python3 -m proxy.common.pki gen_private_key \
 		--private-key-path $(CA_SIGNING_KEY_FILE_PATH)
-	python -m proxy.common.pki remove_passphrase \
+	python3 -m proxy.common.pki remove_passphrase \
 		--private-key-path $(CA_SIGNING_KEY_FILE_PATH)
 
 lib-version:

@@ -66,6 +66,7 @@ class HttpParser:
         # for incoming proxy request and incoming web request.  Web request is the one
         # which is broken.
         self.host: Optional[bytes] = None
+        self.host_upstream: Optional[bytes] = None
         self.port: Optional[int] = None
         self.path: Optional[bytes] = None
 

@@ -1,3 +1,81 @@
+# Using proxy.py to proxification through php script *(php script like upstream proxy)*
+
+All actions at the root of the project.
+No installation is needed.
+
+###  1. Generate CA certificate:
+```
+mkdir certs
+make ca-certificates
+mv *pem certs/
+```
+
+### 2. Import *certs/ca-cert.pem* into Chrome
+
+*Settings -> Advanced -> Privacy and security -> Manage certificates -> Authorities -> Import*
+
+*There will be a pop up window that will ask you if you want to install this certificate.*
+
+*Select "trust the certificate to identify websites" and click OK*
+
+### 3. Upload *proxy/plugin/throught_php_script.py* to your host
+
+Also can use gcloud with *app.yaml*:
+
+```
+runtime: php55
+api_version: 1
+
+handlers:
+- url: /proxy.php
+  script: proxy.php
+```
+
+### 4. Set ENV
+
+For real host
+
+```
+export PROXY_HOST=example.com
+export PROXY_URL=/proxy.php
+export PROXY_PASS=1234
+```
+
+Or for host without DNS records
+*(and for example without noraml cert)*
+
+```
+export PROXY_HOST=example.com
+export PROXY_URL=/proxy.php
+export PROXY_PASS=1234
+export PROXY_IP=127.0.0.1
+export PROXY_NOCKECK=1
+```
+
+### 5. Run
+
+```
+python3 -m proxy --hostname 127.0.0.1 --port 8080 --plugins proxy.plugin.ThroughtPhpScriptPlugin --ca-key-file certs/ca-key.pem --ca-cert-file certs/ca-cert.pem --ca-signing-key-file certs/ca-signing-key.pem --ca-cert-dir=certs/ --log-level WARNING
+```
+
+### Notes:
+Don't forget to change password in php script.
+
+You can use https://github.com/rser1911/chrome_proxy_extension in Chrome
+
+Test your IP
+
+```
+https_proxy="127.0.0.1:8080" curl  'https://ifconfig.me' -o - -k; echo
+```
+
+<br />
+<br />
+
+ ### Origin README.md
+
+ <hr />
+
 [![Proxy.Py](https://raw.githubusercontent.com/abhinavsingh/proxy.py/develop/ProxyPy.png)](https://github.com/abhinavsingh/proxy.py)
 
 [![License](https://img.shields.io/github/license/abhinavsingh/proxy.py.svg)](https://opensource.org/licenses/BSD-3-Clause)

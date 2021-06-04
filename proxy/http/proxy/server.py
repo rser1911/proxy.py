@@ -257,6 +257,8 @@ class HttpProxyPlugin(HttpProtocolHandlerPlugin):
         # Note: can raise HttpRequestRejected exception
         # Invoke plugin.before_upstream_connection
         do_connect = True
+        self.request.host_upstream = self.request.host
+
         for plugin in self.plugins.values():
             r = plugin.before_upstream_connection(self.request)
             if r is None:
@@ -300,6 +302,9 @@ class HttpProxyPlugin(HttpProtocolHandlerPlugin):
                     plugin.client._conn = self.client.connection
                 return self.client.connection
         elif self.server:
+            if self.request.url.scheme == b'https':
+                self.wrap_server()
+
             # - proxy-connection header is a mistake, it doesn't seem to be
             #   officially documented in any specification, drop it.
             # - proxy-authorization is of no use for upstream, remove it.
@@ -367,7 +372,9 @@ class HttpProxyPlugin(HttpProtocolHandlerPlugin):
         assert(self.request.host and self.flags.ca_cert_dir and self.flags.ca_signing_key_file and
                self.flags.ca_key_file and self.flags.ca_cert_file)
 
-        upstream_subject = {s[0][0]: s[0][1] for s in certificate['subject']}
+        upstream_subject = {}
+        if 'subject' in certificate:
+            upstream_subject = {s[0][0]: s[0][1] for s in certificate['subject']}
         public_key_path = os.path.join(self.flags.ca_cert_dir,
                                        '{0}.{1}'.format(text_(self.request.host), 'pub'))
         private_key_path = self.flags.ca_signing_key_file
@@ -442,10 +449,13 @@ class HttpProxyPlugin(HttpProtocolHandlerPlugin):
             ssl.Purpose.SERVER_AUTH, cafile=self.flags.ca_file)
         ctx.options |= ssl.OP_NO_SSLv2 | ssl.OP_NO_SSLv3 | ssl.OP_NO_TLSv1
         ctx.check_hostname = True
+        if hasattr(self.request, 'host_upstream_nocheck'):
+            ctx.check_hostname = False
+            ctx.verify_mode = ssl.CERT_NONE
         self.server.connection.setblocking(True)
         self.server._conn = ctx.wrap_socket(
             self.server.connection,
-            server_hostname=text_(self.request.host))
+            server_hostname=text_(self.request.host_upstream))
         self.server.connection.setblocking(False)
 
     def wrap_client(self) -> None:
@@ -472,7 +482,7 @@ class HttpProxyPlugin(HttpProtocolHandlerPlugin):
                 raise ProxyAuthenticationFailed()
 
     def connect_upstream(self) -> None:
-        host, port = self.request.host, self.request.port
+        host, port = self.request.host_upstream, self.request.port
         if host and port:
             self.server = TcpServerConnection(text_(host), port)
             try:
