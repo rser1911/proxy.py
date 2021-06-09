@@ -3,6 +3,8 @@
 All actions at the root of the project.
 No installation is needed.
 
+![schema](https://github.com/rser1911/proxy.py_throught_php_script/raw/throught_php_script/schema.png)
+
 ###  1. Generate CA certificate:
 ```
 mkdir certs
